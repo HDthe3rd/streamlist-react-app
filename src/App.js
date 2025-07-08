@@ -1,25 +1,39 @@
-import logo from './logo.svg';
-import './App.css';
+import React, { useState } from 'react';
+import Navigation from './components/Navigation/Navigation';
+import Footer from './components/Footer/Footer';
+import StreamListPage from './components/StreamListPage/StreamListPage';
+import MoviesPage from './components/MoviesPage/MoviesPage';
+import CartPage from './components/CartPage/CartPage';
+import AboutPage from './components/AboutPage/AboutPage';
+import { styles } from './styles/styles';
 
-function App() {
+const App = () => {
+  const [currentPage, setCurrentPage] = useState('home');
+
+  const renderPage = () => {
+    switch (currentPage) {
+      case 'home':
+        return <StreamListPage />;
+      case 'movies':
+        return <MoviesPage />;
+      case 'cart':
+        return <CartPage />;
+      case 'about':
+        return <AboutPage />;
+      default:
+        return <StreamListPage />;
+    }
+  };
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div style={styles.app}>
+      <Navigation currentPage={currentPage} onPageChange={setCurrentPage} />
+      <main style={styles.main}>
+        {renderPage()}
+      </main>
+      <Footer />
     </div>
   );
-}
+};
 
 export default App;
