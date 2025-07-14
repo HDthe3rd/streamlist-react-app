@@ -2,6 +2,7 @@ import React from 'react';
 import { styles } from '../../styles/styles';
 import { Icons } from '../../utils/icons';
 
+// Navigation Component
 const Navigation = ({ currentPage, onPageChange }) => {
   const navItems = [
     { id: 'home', label: 'StreamList', icon: Icons.Home },
@@ -18,7 +19,7 @@ const Navigation = ({ currentPage, onPageChange }) => {
           onClick={() => onPageChange('home')}
         >
           <Icons.Stream />
-          StreamList
+          StreamList Pro
         </div>
         <nav style={styles.nav}>
           {navItems.map((item) => (
@@ -50,5 +51,6 @@ const Navigation = ({ currentPage, onPageChange }) => {
     </header>
   );
 };
+
 
 export default Navigation;

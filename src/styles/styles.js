@@ -1,3 +1,4 @@
+// Enhanced Styles with better UX
 export const styles = {
   // Global App Styles
   app: {
@@ -104,13 +105,17 @@ export const styles = {
     textAlign: 'center',
   },
   
-  // StreamList Form Styles
+  // Enhanced StreamList Form Styles
   streamForm: {
     display: 'flex',
     flexDirection: 'column',
     gap: '1.5rem',
     maxWidth: '600px',
-    margin: '0 auto',
+    margin: '0 auto 3rem auto',
+    background: 'rgba(255, 255, 255, 0.8)',
+    padding: '2rem',
+    borderRadius: '12px',
+    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
   },
   
   inputGroup: {
@@ -131,7 +136,7 @@ export const styles = {
     borderRadius: '12px',
     fontSize: '1rem',
     transition: 'all 0.3s ease',
-    background: 'rgba(255, 255, 255, 0.8)',
+    background: 'rgba(255, 255, 255, 0.9)',
     outline: 'none',
   },
   
@@ -150,7 +155,7 @@ export const styles = {
     resize: 'vertical',
     fontFamily: 'inherit',
     transition: 'all 0.3s ease',
-    background: 'rgba(255, 255, 255, 0.8)',
+    background: 'rgba(255, 255, 255, 0.9)',
     outline: 'none',
   },
   
@@ -160,7 +165,7 @@ export const styles = {
     borderRadius: '12px',
     fontSize: '1rem',
     transition: 'all 0.3s ease',
-    background: 'rgba(255, 255, 255, 0.8)',
+    background: 'rgba(255, 255, 255, 0.9)',
     outline: 'none',
     cursor: 'pointer',
   },
@@ -182,17 +187,69 @@ export const styles = {
     outline: 'none',
   },
   
+  buttonSecondary: {
+    background: 'linear-gradient(135deg, #4299e1, #667eea)',
+    color: 'white',
+    border: 'none',
+    padding: '0.5rem 1rem',
+    borderRadius: '8px',
+    fontSize: '0.9rem',
+    fontWeight: '500',
+    cursor: 'pointer',
+    transition: 'all 0.3s ease',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '0.25rem',
+  },
+  
+  buttonSuccess: {
+    background: 'linear-gradient(135deg, #48bb78, #38a169)',
+    color: 'white',
+    border: 'none',
+    padding: '0.5rem 1rem',
+    borderRadius: '8px',
+    fontSize: '0.9rem',
+    fontWeight: '500',
+    cursor: 'pointer',
+    transition: 'all 0.3s ease',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '0.25rem',
+  },
+  
   buttonHover: {
     transform: 'translateY(-2px)',
     boxShadow: '0 8px 25px rgba(255, 107, 107, 0.3)',
   },
   
-  // Stream List Display Styles
+  // Enhanced Stream List Display Styles
   streamList: {
-    marginTop: '2rem',
     display: 'flex',
     flexDirection: 'column',
     gap: '1rem',
+  },
+  
+  streamListHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: '1.5rem',
+    padding: '0 0.5rem',
+  },
+  
+  streamListTitle: {
+    color: '#4a5568',
+    fontSize: '1.5rem',
+    fontWeight: 'bold',
+  },
+  
+  streamListStats: {
+    display: 'flex',
+    gap: '1rem',
+    fontSize: '0.9rem',
+    color: '#718096',
   },
   
   streamItem: {
@@ -202,6 +259,17 @@ export const styles = {
     border: '1px solid rgba(255, 255, 255, 0.3)',
     boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
     transition: 'all 0.3s ease',
+    position: 'relative',
+  },
+  
+  streamItemCompleted: {
+    background: 'rgba(72, 187, 120, 0.1)',
+    border: '1px solid rgba(72, 187, 120, 0.3)',
+  },
+  
+  streamItemEditing: {
+    background: 'rgba(102, 126, 234, 0.1)',
+    border: '1px solid rgba(102, 126, 234, 0.3)',
   },
   
   streamItemHover: {
@@ -209,11 +277,30 @@ export const styles = {
     boxShadow: '0 8px 25px rgba(0, 0, 0, 0.1)',
   },
   
+  streamHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: '1rem',
+  },
+  
   streamTitle: {
     fontSize: '1.3rem',
     fontWeight: 'bold',
     color: '#2d3748',
     marginBottom: '0.5rem',
+    textDecoration: 'none',
+  },
+  
+  streamTitleCompleted: {
+    textDecoration: 'line-through',
+    opacity: 0.7,
+  },
+  
+  streamActions: {
+    display: 'flex',
+    gap: '0.5rem',
+    flexWrap: 'wrap',
   },
   
   streamMeta: {
@@ -230,11 +317,33 @@ export const styles = {
     borderRadius: '20px',
     fontSize: '0.85rem',
     fontWeight: '500',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.25rem',
   },
   
   streamDescription: {
     color: '#718096',
     lineHeight: '1.6',
+    marginBottom: '1rem',
+  },
+  
+  // Edit Form Styles
+  editForm: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '1rem',
+    marginTop: '1rem',
+    padding: '1rem',
+    background: 'rgba(102, 126, 234, 0.05)',
+    borderRadius: '8px',
+    border: '1px solid rgba(102, 126, 234, 0.2)',
+  },
+  
+  editFormActions: {
+    display: 'flex',
+    gap: '0.5rem',
+    justifyContent: 'flex-end',
   },
   
   // Coming Soon Styles
@@ -282,6 +391,22 @@ export const styles = {
     fontSize: '0.9rem',
     cursor: 'pointer',
     transition: 'all 0.3s ease',
-    marginTop: '1rem',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.25rem',
+  },
+  
+  // Notification/Toast Styles
+  notification: {
+    position: 'fixed',
+    top: '20px',
+    right: '20px',
+    background: 'linear-gradient(135deg, #48bb78, #38a169)',
+    color: 'white',
+    padding: '1rem 1.5rem',
+    borderRadius: '8px',
+    boxShadow: '0 4px 12px rgba(72, 187, 120, 0.3)',
+    zIndex: 2000,
+    animation: 'slideIn 0.3s ease',
   },
 };

@@ -7,6 +7,7 @@ import CartPage from './components/CartPage/CartPage';
 import AboutPage from './components/AboutPage/AboutPage';
 import { styles } from './styles/styles';
 
+// Main App Component
 const App = () => {
   const [currentPage, setCurrentPage] = useState('home');
 
