@@ -6,12 +6,13 @@ const CartPage = () => (
   <div style={styles.page}>
     <div style={styles.comingSoon}>
       <div style={styles.comingSoonIcon}>
-        <Icons.Construction />
+        <Icons.Cart />
       </div>
-      <h1 style={styles.comingSoonTitle}>Your Cart</h1>
+      <h1 style={styles.comingSoonTitle}>Shopping Cart System</h1>
       <p style={styles.comingSoonText}>
-        This page is currently under development and will be available in Week 4. 
-        Here you'll be able to manage your selected items and proceed with your choices.
+        This page will feature a complete shopping cart system with localStorage persistence, 
+        allowing users to add movies from search results, manage quantities, and checkout. 
+        Integration with the Movies page and StreamList will provide a seamless user experience.
       </p>
     </div>
   </div>

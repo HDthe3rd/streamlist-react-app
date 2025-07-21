@@ -1,9 +1,9 @@
 // Notification Component
-import React from 'react';
+import React, { useEffect } from 'react';
 import { styles } from '../../styles/styles';
 
 const Notification = ({ message, onClose }) => {
-  React.useEffect(() => {
+  useEffect(() => {
     const timer = setTimeout(onClose, 3000);
     return () => clearTimeout(timer);
   }, [onClose]);

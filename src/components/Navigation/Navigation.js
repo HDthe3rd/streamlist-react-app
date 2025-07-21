@@ -30,17 +30,6 @@ const Navigation = ({ currentPage, onPageChange }) => {
                 ...styles.navLink,
                 ...(currentPage === item.id ? styles.navLinkActive : {})
               }}
-              onMouseEnter={(e) => {
-                if (currentPage !== item.id) {
-                  Object.assign(e.target.style, styles.navLinkHover);
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (currentPage !== item.id) {
-                  e.target.style.background = 'transparent';
-                  e.target.style.transform = 'translateY(0)';
-                }
-              }}
             >
               <item.icon />
               {item.label}

@@ -21,4 +21,12 @@ export const Icons = {
   Construction: () => <span>🚧</span>,
   Check: () => <span>✓</span>,
   Close: () => <span>✕</span>,
+  Search: () => <span>🔍</span>,
+  Star: () => <span>⭐</span>,
+  Calendar: () => <span>📅</span>,
+  Loading: () => <span>⏳</span>,
+  Error: () => <span>❌</span>,
+  Success: () => <span>✅</span>,
+  API: () => <span>🔗</span>,
+  Database: () => <span>💾</span>,
 };

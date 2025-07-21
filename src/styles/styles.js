@@ -1,6 +1,8 @@
-// Enhanced Styles with better UX
+import React, { useState, useEffect } from 'react';
+
+// Enhanced Styles with new components
 export const styles = {
-  // Global App Styles
+  // All your existing styles plus new ones for API and localStorage features
   app: {
     fontFamily: '"Segoe UI", Tahoma, Geneva, Verdana, sans-serif',
     minHeight: '100vh',
@@ -8,7 +10,6 @@ export const styles = {
     color: '#333',
   },
   
-  // Header Styles
   header: {
     background: 'rgba(255, 255, 255, 0.95)',
     backdropFilter: 'blur(10px)',
@@ -41,7 +42,6 @@ export const styles = {
     cursor: 'pointer',
   },
   
-  // Navigation Styles
   nav: {
     display: 'flex',
     gap: '1rem',
@@ -72,12 +72,6 @@ export const styles = {
     boxShadow: '0 4px 12px rgba(255, 107, 107, 0.3)',
   },
   
-  navLinkHover: {
-    background: 'rgba(255, 107, 107, 0.1)',
-    transform: 'translateY(-1px)',
-  },
-  
-  // Main Content Styles
   main: {
     maxWidth: '1200px',
     margin: '0 auto',
@@ -85,7 +79,6 @@ export const styles = {
     minHeight: 'calc(100vh - 200px)',
   },
   
-  // Page Styles
   page: {
     background: 'rgba(255, 255, 255, 0.95)',
     borderRadius: '16px',
@@ -105,7 +98,6 @@ export const styles = {
     textAlign: 'center',
   },
   
-  // Enhanced StreamList Form Styles
   streamForm: {
     display: 'flex',
     flexDirection: 'column',
@@ -224,7 +216,6 @@ export const styles = {
     boxShadow: '0 8px 25px rgba(255, 107, 107, 0.3)',
   },
   
-  // Enhanced Stream List Display Styles
   streamList: {
     display: 'flex',
     flexDirection: 'column',
@@ -328,7 +319,6 @@ export const styles = {
     marginBottom: '1rem',
   },
   
-  // Edit Form Styles
   editForm: {
     display: 'flex',
     flexDirection: 'column',
@@ -346,7 +336,121 @@ export const styles = {
     justifyContent: 'flex-end',
   },
   
-  // Coming Soon Styles
+  // NEW STYLES for Movies API page
+  searchContainer: {
+    display: 'flex',
+    gap: '1rem',
+    marginBottom: '2rem',
+    maxWidth: '800px',
+    margin: '0 auto 2rem auto',
+  },
+  
+  searchInput: {
+    flex: 1,
+    padding: '1rem',
+    border: '2px solid #e2e8f0',
+    borderRadius: '12px',
+    fontSize: '1rem',
+    background: 'rgba(255, 255, 255, 0.9)',
+    outline: 'none',
+  },
+  
+  searchButton: {
+    background: 'linear-gradient(135deg, #667eea, #764ba2)',
+    color: 'white',
+    border: 'none',
+    padding: '1rem 2rem',
+    borderRadius: '12px',
+    fontSize: '1rem',
+    fontWeight: '600',
+    cursor: 'pointer',
+    transition: 'all 0.3s ease',
+    whiteSpace: 'nowrap',
+  },
+  
+  moviesGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+    gap: '2rem',
+    marginTop: '2rem',
+  },
+  
+  movieCard: {
+    background: 'rgba(255, 255, 255, 0.9)',
+    borderRadius: '12px',
+    padding: '1.5rem',
+    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
+    transition: 'all 0.3s ease',
+    cursor: 'pointer',
+  },
+  
+  movieCardHover: {
+    transform: 'translateY(-4px)',
+    boxShadow: '0 8px 25px rgba(0, 0, 0, 0.15)',
+  },
+  
+  moviePoster: {
+    width: '100%',
+    height: '300px',
+    objectFit: 'cover',
+    borderRadius: '8px',
+    marginBottom: '1rem',
+    background: '#f7fafc',
+  },
+  
+  movieTitle: {
+    fontSize: '1.2rem',
+    fontWeight: 'bold',
+    color: '#2d3748',
+    marginBottom: '0.5rem',
+  },
+  
+  movieMeta: {
+    display: 'flex',
+    gap: '1rem',
+    marginBottom: '1rem',
+    flexWrap: 'wrap',
+  },
+  
+  movieDescription: {
+    color: '#718096',
+    lineHeight: '1.6',
+    marginBottom: '1rem',
+    display: '-webkit-box',
+    WebkitLineClamp: 3,
+    WebkitBoxOrient: 'vertical',
+    overflow: 'hidden',
+  },
+  
+  loadingSpinner: {
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: '3rem',
+    fontSize: '1.2rem',
+    color: '#667eea',
+  },
+  
+  errorMessage: {
+    background: 'rgba(255, 107, 107, 0.1)',
+    color: '#e53e3e',
+    padding: '1rem',
+    borderRadius: '8px',
+    border: '1px solid rgba(255, 107, 107, 0.3)',
+    textAlign: 'center',
+    marginBottom: '2rem',
+  },
+  
+  successMessage: {
+    background: 'rgba(72, 187, 120, 0.1)',
+    color: '#38a169',
+    padding: '1rem',
+    borderRadius: '8px',
+    border: '1px solid rgba(72, 187, 120, 0.3)',
+    textAlign: 'center',
+    marginBottom: '2rem',
+  },
+  
   comingSoon: {
     textAlign: 'center',
     padding: '4rem 2rem',
@@ -372,7 +476,6 @@ export const styles = {
     lineHeight: '1.6',
   },
   
-  // Footer Styles
   footer: {
     background: 'rgba(255, 255, 255, 0.95)',
     backdropFilter: 'blur(10px)',
@@ -396,7 +499,6 @@ export const styles = {
     gap: '0.25rem',
   },
   
-  // Notification/Toast Styles
   notification: {
     position: 'fixed',
     top: '20px',

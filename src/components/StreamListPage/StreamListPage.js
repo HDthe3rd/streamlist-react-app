@@ -1,8 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { styles } from '../../styles/styles';
 import { Icons } from '../../utils/icons';
+import { localStorageUtils } from '../../utils/localStorageUtils';
+import { passwordSecurity } from '../../utils/passwordSecurity';
 import Notification from '../Notification/Notification';
 
+// Enhanced StreamList Homepage Component with LocalStorage
 const StreamListPage = () => {
   const [streams, setStreams] = useState([]);
   const [formData, setFormData] = useState({
@@ -16,6 +19,22 @@ const StreamListPage = () => {
   const [editingId, setEditingId] = useState(null);
   const [editFormData, setEditFormData] = useState({});
   const [notification, setNotification] = useState('');
+
+  // Load data from localStorage on component mount
+  useEffect(() => {
+    const savedStreams = localStorageUtils.loadStreams();
+    if (savedStreams.length > 0) {
+      setStreams(savedStreams);
+      showNotification(`Loaded ${savedStreams.length} items from previous session`);
+    }
+  }, []);
+
+  // Save to localStorage whenever streams change
+  useEffect(() => {
+    if (streams.length > 0) {
+      localStorageUtils.saveStreams(streams);
+    }
+  }, [streams]);
 
   const showNotification = (message) => {
     setNotification(message);
@@ -32,7 +51,6 @@ const StreamListPage = () => {
       [name]: value
     }));
     
-    // Log input to console as required by specifications
     console.log(`Input changed - ${name}: ${value}`);
     console.log('Current form data:', { ...formData, [name]: value });
   };
@@ -59,7 +77,7 @@ const StreamListPage = () => {
       setStreams(prev => [newStream, ...prev]);
       console.log('New stream added:', newStream);
       
-      // Clear form as required
+      // Clear form
       setFormData({
         title: '',
         platform: '',
@@ -69,6 +87,11 @@ const StreamListPage = () => {
       });
       
       showNotification(`"${newStream.title}" added to your stream list!`);
+      
+      // Demonstrate password security for educational purposes
+      if (newStream.title.toLowerCase().includes('password')) {
+        passwordSecurity.demonstratePasswordSecurity('example123');
+      }
     }
   };
 
@@ -122,6 +145,14 @@ const StreamListPage = () => {
     showNotification(`"${title}" ${action}!`);
   };
 
+  const handleClearAll = () => {
+    if (window.confirm('Are you sure you want to clear all data? This cannot be undone.')) {
+      setStreams([]);
+      localStorageUtils.clearStreams();
+      showNotification('All data cleared');
+    }
+  };
+
   const handleKeyPress = (e) => {
     if (e.key === 'Enter' && e.target.type !== 'textarea') {
       e.preventDefault();
@@ -135,6 +166,9 @@ const StreamListPage = () => {
   return (
     <div style={styles.page}>
       <h1 style={styles.pageTitle}>My Enhanced Streaming List</h1>
+      <p style={{ textAlign: 'center', color: '#718096', marginBottom: '2rem' }}>
+        <Icons.Database /> Data persists across sessions with LocalStorage
+      </p>
       
       {/* Add New Stream Form */}
       <div style={styles.streamForm}>
@@ -241,21 +275,26 @@ const StreamListPage = () => {
           />
         </div>
 
-        <button 
-          onClick={handleSubmit}
-          style={styles.button}
-          onMouseEnter={(e) => {
-            Object.assign(e.target.style, styles.buttonHover);
-          }}
-          onMouseLeave={(e) => {
-            e.target.style.transform = 'translateY(0)';
-            e.target.style.boxShadow = 'none';
-          }}
-          disabled={!formData.title.trim()}
-        >
-          <Icons.Add />
-          Add to Stream List
-        </button>
+        <div style={{ display: 'flex', gap: '1rem' }}>
+          <button 
+            onClick={handleSubmit}
+            style={styles.button}
+            disabled={!formData.title.trim()}
+          >
+            <Icons.Add />
+            Add to Stream List
+          </button>
+          
+          {streams.length > 0 && (
+            <button 
+              onClick={handleClearAll}
+              style={styles.deleteButton}
+            >
+              <Icons.Delete />
+              Clear All
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Stream List Display */}
@@ -280,17 +319,6 @@ const StreamListPage = () => {
                 ...(stream.completed ? styles.streamItemCompleted : {}),
                 ...(editingId === stream.id ? styles.streamItemEditing : {})
               }}
-              onMouseEnter={(e) => {
-                if (editingId !== stream.id) {
-                  Object.assign(e.target.style, styles.streamItemHover);
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (editingId !== stream.id) {
-                  e.target.style.transform = 'translateY(0)';
-                  e.target.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.05)';
-                }
-              }}
             >
               <div style={styles.streamHeader}>
                 <div style={{
@@ -309,7 +337,6 @@ const StreamListPage = () => {
                         ? 'linear-gradient(135deg, #ffa726, #ff9800)' 
                         : 'linear-gradient(135deg, #48bb78, #38a169)'
                     }}
-                    title={stream.completed ? 'Mark as incomplete' : 'Mark as completed'}
                   >
                     {stream.completed ? <Icons.Incomplete /> : <Icons.Complete />}
                     {stream.completed ? 'Undo' : 'Complete'}
@@ -320,7 +347,6 @@ const StreamListPage = () => {
                       <button
                         onClick={() => handleEdit(stream)}
                         style={styles.buttonSecondary}
-                        title="Edit this stream"
                       >
                         <Icons.Edit />
                         Edit
@@ -329,7 +355,6 @@ const StreamListPage = () => {
                       <button
                         onClick={() => handleDelete(stream.id, stream.title)}
                         style={styles.deleteButton}
-                        title="Delete this stream"
                       >
                         <Icons.Delete />
                         Delete
