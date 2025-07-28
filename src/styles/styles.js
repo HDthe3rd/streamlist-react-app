@@ -1,5 +1,3 @@
-import React, { useState, useEffect } from 'react';
-
 // Enhanced Styles with new components
 export const styles = {
   // All your existing styles plus new ones for API and localStorage features

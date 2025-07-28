@@ -1,26 +1,280 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, memo, useRef } from 'react';
 import { styles } from '../../styles/styles';
 import { Icons } from '../../utils/icons';
 import { localStorageUtils } from '../../utils/localStorageUtils';
-import { passwordSecurity } from '../../utils/passwordSecurity';
+import { securityUtils } from '../../utils/securityUtils';
 import Notification from '../Notification/Notification';
 
-// Enhanced StreamList Homepage Component with LocalStorage
+// Memoized Stream Item Component for better performance
+const StreamItem = memo(({ 
+  stream, 
+  isEditing, 
+  onEdit, 
+  onSave, 
+  onCancel, 
+  onDelete, 
+  onToggleComplete,
+  editFormData,
+  onEditInputChange 
+}) => {
+  const editFormRef = useRef(null);
+
+  // Scroll to edit form when editing starts
+  useEffect(() => {
+    if (isEditing && editFormRef.current) {
+      setTimeout(() => {
+        editFormRef.current.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'center' 
+        });
+      }, 100);
+    }
+  }, [isEditing]);
+
+  // Memoize style calculations
+  const itemStyle = useMemo(() => ({
+    ...styles.streamItem,
+    ...(stream.completed ? styles.streamItemCompleted : {}),
+    ...(isEditing ? styles.streamItemEditing : {})
+  }), [stream.completed, isEditing]);
+
+  const titleStyle = useMemo(() => ({
+    ...styles.streamTitle,
+    ...(stream.completed ? styles.streamTitleCompleted : {})
+  }), [stream.completed]);
+
+  // Memoize priority badge color
+  const priorityBadgeColor = useMemo(() => {
+    switch (stream.priority) {
+      case 'high': return '#ff6b6b';
+      case 'medium': return '#ffa726';
+      default: return '#4caf50';
+    }
+  }, [stream.priority]);
+
+  const priorityText = useMemo(() => {
+    switch (stream.priority) {
+      case 'high': return '🔥 HIGH';
+      case 'medium': return '⭐ MEDIUM';
+      default: return '📅 LOW';
+    }
+  }, [stream.priority]);
+
+  // Event handlers with useCallback for performance
+  const handleEdit = useCallback(() => onEdit(stream), [onEdit, stream]);
+  const handleDelete = useCallback(() => onDelete(stream.id, stream.title), [onDelete, stream.id, stream.title]);
+  const handleToggleComplete = useCallback(() => onToggleComplete(stream.id, stream.title), [onToggleComplete, stream.id, stream.title]);
+
+  return (
+    <div style={itemStyle}>
+      <div style={styles.streamHeader}>
+        <div style={titleStyle}>
+          {stream.title}
+          {stream.movieData?.addedFromMovieSearch && (
+            <span style={{
+              fontSize: '0.8rem',
+              background: 'rgba(102, 126, 234, 0.2)',
+              color: '#4a5568',
+              padding: '0.2rem 0.5rem',
+              borderRadius: '4px',
+              marginLeft: '0.5rem'
+            }}>
+              🎬 From Movie Search
+            </span>
+          )}
+        </div>
+        
+        <div style={styles.streamActions}>
+          <button
+            onClick={handleToggleComplete}
+            style={{
+              ...styles.buttonSuccess,
+              background: stream.completed 
+                ? 'linear-gradient(135deg, #ffa726, #ff9800)' 
+                : 'linear-gradient(135deg, #48bb78, #38a169)'
+            }}
+          >
+            {stream.completed ? <Icons.Incomplete /> : <Icons.Complete />}
+            {stream.completed ? 'Undo' : 'Complete'}
+          </button>
+          
+          {!isEditing && (
+            <>
+              <button onClick={handleEdit} style={styles.buttonSecondary}>
+                <Icons.Edit />
+                Edit
+              </button>
+              
+              <button onClick={handleDelete} style={styles.deleteButton}>
+                <Icons.Delete />
+                Delete
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+
+      <div style={styles.streamMeta}>
+        {stream.platform && (
+          <span style={styles.streamBadge}>
+            <Icons.Platform /> {stream.platform}
+          </span>
+        )}
+        {stream.genre && (
+          <span style={styles.streamBadge}>
+            <Icons.Genre /> {stream.genre}
+          </span>
+        )}
+        <span style={{ ...styles.streamBadge, background: priorityBadgeColor }}>
+          <Icons.Priority /> {priorityText}
+        </span>
+        <span style={styles.streamBadge}>
+          <Icons.Date /> Added: {stream.dateAdded}
+        </span>
+        {stream.dateUpdated !== stream.dateAdded && (
+          <span style={styles.streamBadge}>
+            <Icons.Date /> Updated: {stream.dateUpdated}
+          </span>
+        )}
+        {stream.movieData?.voteAverage && (
+          <span style={{
+            ...styles.streamBadge,
+            background: stream.movieData.voteAverage >= 7 ? '#48bb78' : 
+                      stream.movieData.voteAverage >= 5 ? '#ffa726' : '#ff6b6b'
+          }}>
+            <Icons.Star /> {stream.movieData.voteAverage}/10
+          </span>
+        )}
+      </div>
+
+      {stream.description && (
+        <div style={styles.streamDescription}>
+          {stream.description}
+        </div>
+      )}
+
+      {/* Edit Form with smooth scrolling */}
+      {isEditing && (
+        <div ref={editFormRef} style={styles.editForm}>
+          <h4 style={{ color: '#4a5568', marginBottom: '1rem' }}>Edit Stream</h4>
+          
+          <div style={styles.inputGroup}>
+            <label style={styles.label}>Title</label>
+            <input
+              name="title"
+              type="text"
+              value={editFormData.title || ''}
+              onChange={onEditInputChange}
+              style={styles.input}
+            />
+          </div>
+
+          <div style={styles.inputGroup}>
+            <label style={styles.label}>Platform</label>
+            <input
+              name="platform"
+              type="text"
+              value={editFormData.platform || ''}
+              onChange={onEditInputChange}
+              style={styles.input}
+            />
+          </div>
+
+          <div style={styles.inputGroup}>
+            <label style={styles.label}>Genre</label>
+            <input
+              name="genre"
+              type="text"
+              value={editFormData.genre || ''}
+              onChange={onEditInputChange}
+              style={styles.input}
+            />
+          </div>
+
+          <div style={styles.inputGroup}>
+            <label style={styles.label}>Priority</label>
+            <select
+              name="priority"
+              value={editFormData.priority || 'medium'}
+              onChange={onEditInputChange}
+              style={styles.select}
+            >
+              <option value="low">Low Priority</option>
+              <option value="medium">Medium Priority</option>
+              <option value="high">High Priority</option>
+            </select>
+          </div>
+
+          <div style={styles.inputGroup}>
+            <label style={styles.label}>Description</label>
+            <textarea
+              name="description"
+              value={editFormData.description || ''}
+              onChange={onEditInputChange}
+              style={styles.textarea}
+            />
+          </div>
+
+          <div style={styles.editFormActions}>
+            <button
+              onClick={onSave}
+              style={styles.buttonSuccess}
+              disabled={!editFormData.title?.trim()}
+            >
+              <Icons.Save />
+              Save Changes
+            </button>
+            <button onClick={onCancel} style={styles.deleteButton}>
+              <Icons.Cancel />
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+});
+
+// Performance-optimized StreamListPage Component with fixes
 const StreamListPage = () => {
   const [streams, setStreams] = useState([]);
-  const [formData, setFormData] = useState({
+  const [editingId, setEditingId] = useState(null);
+  const [editFormData, setEditFormData] = useState({});
+  const [notification, setNotification] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortBy, setSortBy] = useState('dateAdded');
+  const [filterBy, setFilterBy] = useState('all');
+
+  // Form state with explicit initial values
+  const initialFormState = {
     title: '',
     platform: '',
     genre: '',
     priority: 'medium',
     description: ''
-  });
-  const [focusedInput, setFocusedInput] = useState(null);
-  const [editingId, setEditingId] = useState(null);
-  const [editFormData, setEditFormData] = useState({});
-  const [notification, setNotification] = useState('');
+  };
 
-  // Load data from localStorage on component mount
+  const [formData, setFormData] = useState(initialFormState);
+  const [errors, setErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Refs for form inputs to help with clearing
+  const titleInputRef = useRef(null);
+
+  // Debounced localStorage save
+  const debouncedSave = useMemo(() => {
+    let timeoutId;
+    return (streams) => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        if (streams.length > 0) {
+          localStorageUtils.saveStreams(streams);
+        }
+      }, 500);
+    };
+  }, []);
+
+  // Load data on mount
   useEffect(() => {
     const savedStreams = localStorageUtils.loadStreams();
     if (savedStreams.length > 0) {
@@ -29,45 +283,133 @@ const StreamListPage = () => {
     }
   }, []);
 
-  // Save to localStorage whenever streams change
+  // Debounced save when streams change
   useEffect(() => {
     if (streams.length > 0) {
-      localStorageUtils.saveStreams(streams);
+      debouncedSave(streams);
     }
+  }, [streams, debouncedSave]);
+
+  // Memoized filtered and sorted streams
+  const filteredAndSortedStreams = useMemo(() => {
+    let filtered = streams;
+
+    // Filter by search term
+    if (searchTerm.trim()) {
+      const term = searchTerm.toLowerCase();
+      filtered = streams.filter(stream =>
+        stream.title.toLowerCase().includes(term) ||
+        (stream.platform && stream.platform.toLowerCase().includes(term)) ||
+        (stream.genre && stream.genre.toLowerCase().includes(term)) ||
+        (stream.description && stream.description.toLowerCase().includes(term))
+      );
+    }
+
+    // Filter by completion status
+    if (filterBy === 'completed') {
+      filtered = filtered.filter(stream => stream.completed);
+    } else if (filterBy === 'incomplete') {
+      filtered = filtered.filter(stream => !stream.completed);
+    }
+
+    // Sort streams
+    return filtered.sort((a, b) => {
+      switch (sortBy) {
+        case 'title':
+          return a.title.localeCompare(b.title);
+        case 'priority':
+          const priorityOrder = { high: 3, medium: 2, low: 1 };
+          return priorityOrder[b.priority] - priorityOrder[a.priority];
+        case 'dateAdded':
+        default:
+          return new Date(b.dateAdded) - new Date(a.dateAdded);
+      }
+    });
+  }, [streams, searchTerm, sortBy, filterBy]);
+
+  // Memoized statistics
+  const statistics = useMemo(() => {
+    const total = streams.length;
+    const completed = streams.filter(s => s.completed).length;
+    return {
+      total,
+      completed,
+      remaining: total - completed,
+      completionRate: total > 0 ? Math.round((completed / total) * 100) : 0
+    };
   }, [streams]);
 
-  const showNotification = (message) => {
+  // Optimized event handlers with useCallback
+  const showNotification = useCallback((message) => {
     setNotification(message);
-  };
+  }, []);
 
-  const hideNotification = () => {
+  const hideNotification = useCallback(() => {
     setNotification('');
-  };
+  }, []);
 
-  const handleInputChange = (e) => {
+  // Enhanced form input handler
+  const handleInputChange = useCallback((e) => {
     const { name, value } = e.target;
+    const sanitizedValue = securityUtils.sanitizeInput(value);
+    
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [name]: sanitizedValue
     }));
     
-    console.log(`Input changed - ${name}: ${value}`);
-    console.log('Current form data:', { ...formData, [name]: value });
-  };
+    // Clear error for this field
+    if (errors[name]) {
+      setErrors(prev => ({
+        ...prev,
+        [name]: undefined
+      }));
+    }
+  }, [errors]);
 
-  const handleEditInputChange = (e) => {
-    const { name, value } = e.target;
-    setEditFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-    console.log(`Edit input changed - ${name}: ${value}`);
-  };
+  // Enhanced clear form function
+  const clearForm = useCallback(() => {
+    console.log('Clearing form...');
+    
+    // Reset form data to initial state
+    setFormData(initialFormState);
+    setErrors({});
+    
+    // Force form inputs to clear by directly setting values
+    const inputs = document.querySelectorAll('form input, form textarea, form select');
+    inputs.forEach(input => {
+      if (input.name === 'title' || input.name === 'platform' || input.name === 'genre' || input.name === 'description') {
+        input.value = '';
+      } else if (input.name === 'priority') {
+        input.value = 'medium';
+      }
+    });
+    
+    // Focus back to title input
+    if (titleInputRef.current) {
+      titleInputRef.current.focus();
+    }
+    
+    console.log('Form cleared successfully');
+  }, []);
 
-  const handleSubmit = () => {
-    if (formData.title.trim()) {
+  // Enhanced add stream function
+  const handleAddStream = useCallback(async () => {
+    console.log('Adding stream with data:', formData);
+    setIsSubmitting(true);
+    
+    try {
+      // Validate form
+      const validation = securityUtils.validateStreamData(formData);
+      if (!validation.isValid) {
+        setErrors(validation.errors);
+        setIsSubmitting(false);
+        showNotification('Please fix the errors in the form');
+        return;
+      }
+
       const newStream = {
-        id: Date.now(),
+        id: Date.now() + Math.random(), // Better ID generation
         ...formData,
         completed: false,
         dateAdded: new Date().toLocaleDateString(),
@@ -75,27 +417,24 @@ const StreamListPage = () => {
       };
       
       setStreams(prev => [newStream, ...prev]);
-      console.log('New stream added:', newStream);
+      showNotification(`✅ "${newStream.title}" added to your stream list!`);
       
-      // Clear form
-      setFormData({
-        title: '',
-        platform: '',
-        genre: '',
-        priority: 'medium',
-        description: ''
-      });
+      console.log('Stream added successfully:', newStream.title);
       
-      showNotification(`"${newStream.title}" added to your stream list!`);
+      // Clear form after successful addition - with delay to ensure state update
+      setTimeout(() => {
+        clearForm();
+      }, 100);
       
-      // Demonstrate password security for educational purposes
-      if (newStream.title.toLowerCase().includes('password')) {
-        passwordSecurity.demonstratePasswordSecurity('example123');
-      }
+    } catch (error) {
+      console.error('Error adding stream:', error);
+      showNotification('❌ Error adding stream. Please try again.');
+    } finally {
+      setIsSubmitting(false);
     }
-  };
+  }, [formData, showNotification, clearForm]);
 
-  const handleEdit = (stream) => {
+  const handleEdit = useCallback((stream) => {
     setEditingId(stream.id);
     setEditFormData({
       title: stream.title,
@@ -104,10 +443,24 @@ const StreamListPage = () => {
       priority: stream.priority,
       description: stream.description
     });
-    console.log('Editing stream:', stream.title);
-  };
+  }, []);
 
-  const handleSaveEdit = () => {
+  const handleEditInputChange = useCallback((e) => {
+    const { name, value } = e.target;
+    const sanitizedValue = securityUtils.sanitizeInput(value);
+    setEditFormData(prev => ({
+      ...prev,
+      [name]: sanitizedValue
+    }));
+  }, []);
+
+  const handleSaveEdit = useCallback(() => {
+    const validation = securityUtils.validateStreamData(editFormData);
+    if (!validation.isValid) {
+      showNotification('Please fix validation errors');
+      return;
+    }
+
     setStreams(prev => prev.map(stream => 
       stream.id === editingId 
         ? { ...stream, ...editFormData, dateUpdated: new Date().toLocaleDateString() }
@@ -115,141 +468,184 @@ const StreamListPage = () => {
     ));
     setEditingId(null);
     setEditFormData({});
-    console.log('Stream updated:', editFormData.title);
-    showNotification('Stream updated successfully!');
-  };
+    showNotification('✅ Stream updated successfully!');
+  }, [editFormData, editingId, showNotification]);
 
-  const handleCancelEdit = () => {
+  const handleCancelEdit = useCallback(() => {
     setEditingId(null);
     setEditFormData({});
-    console.log('Edit cancelled');
-  };
+  }, []);
 
-  const handleDelete = (id, title) => {
+  const handleDelete = useCallback((id, title) => {
     if (window.confirm(`Are you sure you want to delete "${title}"?`)) {
       setStreams(prev => prev.filter(stream => stream.id !== id));
-      console.log('Stream deleted:', title);
-      showNotification(`"${title}" removed from your list`);
+      showNotification(`🗑️ "${title}" removed from your list`);
     }
-  };
+  }, [showNotification]);
 
-  const handleToggleComplete = (id, title) => {
+  const handleToggleComplete = useCallback((id, title) => {
     setStreams(prev => prev.map(stream => 
       stream.id === id 
         ? { ...stream, completed: !stream.completed, dateUpdated: new Date().toLocaleDateString() }
         : stream
     ));
     const stream = streams.find(s => s.id === id);
-    const action = stream.completed ? 'marked as incomplete' : 'completed';
-    console.log(`Stream ${action}:`, title);
-    showNotification(`"${title}" ${action}!`);
-  };
+    const action = stream?.completed ? 'marked as incomplete' : 'completed';
+    showNotification(`${stream?.completed ? '↩️' : '✅'} "${title}" ${action}!`);
+  }, [streams, showNotification]);
 
-  const handleClearAll = () => {
+  const handleClearAll = useCallback(() => {
     if (window.confirm('Are you sure you want to clear all data? This cannot be undone.')) {
       setStreams([]);
       localStorageUtils.clearStreams();
-      showNotification('All data cleared');
+      showNotification('🧹 All data cleared');
     }
-  };
+  }, [showNotification]);
 
-  const handleKeyPress = (e) => {
-    if (e.key === 'Enter' && e.target.type !== 'textarea') {
-      e.preventDefault();
-      handleSubmit();
+  // Enhanced search function with better feedback
+  const handleSearch = useCallback(() => {
+    if (searchTerm.trim()) {
+      showNotification(`🔍 Searching for "${searchTerm}"`);
+    } else {
+      showNotification('📋 Showing all streams');
     }
-  };
+  }, [searchTerm, showNotification]);
 
-  const completedCount = streams.filter(s => s.completed).length;
-  const totalCount = streams.length;
+  // Enhanced reset function to show full queue
+  const showFullQueue = useCallback(() => {
+    setSearchTerm('');
+    setFilterBy('all');
+    setSortBy('dateAdded');
+    showNotification('📋 Showing your complete streaming queue');
+  }, [showNotification]);
+
+  const handleKeyPress = useCallback((e) => {
+    if (e.key === 'Enter') {
+      if (e.target.name === 'search') {
+        handleSearch();
+      } else if (e.target.type !== 'textarea') {
+        e.preventDefault();
+        handleAddStream();
+      }
+    }
+  }, [handleSearch, handleAddStream]);
 
   return (
     <div style={styles.page}>
       <h1 style={styles.pageTitle}>My Enhanced Streaming List</h1>
       <p style={{ textAlign: 'center', color: '#718096', marginBottom: '2rem' }}>
-        <Icons.Database /> Data persists across sessions with LocalStorage
+        <Icons.Database /> Performance-optimized with secure data storage
       </p>
       
-      {/* Add New Stream Form */}
-      <div style={styles.streamForm}>
+      {/* Statistics Dashboard */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+        gap: '1rem',
+        marginBottom: '2rem'
+      }}>
+        <div style={styles.streamBadge}>
+          📊 Total: {statistics.total}
+        </div>
+        <div style={styles.streamBadge}>
+          ✅ Completed: {statistics.completed}
+        </div>
+        <div style={styles.streamBadge}>
+          ⏳ Remaining: {statistics.remaining}
+        </div>
+        <div style={styles.streamBadge}>
+          📈 {statistics.completionRate}% Complete
+        </div>
+      </div>
+
+      {/* Enhanced Search and Filter Controls */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: '2fr auto auto 1fr 1fr',
+        gap: '1rem',
+        marginBottom: '2rem',
+        alignItems: 'end'
+      }}>
+        <input
+          name="search"
+          type="text"
+          placeholder="Search streams..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          onKeyPress={handleKeyPress}
+          style={styles.input}
+        />
+        <button
+          onClick={handleSearch}
+          style={{...styles.buttonSecondary, height: 'fit-content', padding: '1rem'}}
+        >
+          <Icons.Search />
+          Search
+        </button>
+        <button
+          onClick={showFullQueue}
+          style={{...styles.button, height: 'fit-content', padding: '1rem', fontSize: '0.9rem'}}
+          title="Show complete queue"
+        >
+          <Icons.Home />
+          Full Queue
+        </button>
+        <select
+          value={sortBy}
+          onChange={(e) => setSortBy(e.target.value)}
+          style={styles.select}
+        >
+          <option value="dateAdded">Sort by Date Added</option>
+          <option value="title">Sort by Title</option>
+          <option value="priority">Sort by Priority</option>
+        </select>
+        <select
+          value={filterBy}
+          onChange={(e) => setFilterBy(e.target.value)}
+          style={styles.select}
+        >
+          <option value="all">All Streams</option>
+          <option value="completed">Completed</option>
+          <option value="incomplete">Incomplete</option>
+        </select>
+      </div>
+
+      {/* Enhanced Add New Stream Form */}
+      <form style={styles.streamForm} onSubmit={(e) => e.preventDefault()}>
         <h3 style={{ textAlign: 'center', color: '#4a5568', marginBottom: '1.5rem' }}>
           Add New Stream
         </h3>
         
-        <div style={styles.inputGroup}>
-          <label style={styles.label}>
-            <Icons.Stream /> Title *
-          </label>
-          <input
-            name="title"
-            type="text"
-            value={formData.title}
-            onChange={handleInputChange}
-            onKeyPress={handleKeyPress}
-            placeholder="Enter movie or show title"
-            style={{
-              ...styles.input,
-              ...(focusedInput === 'title' ? styles.inputFocus : {})
-            }}
-            onFocus={() => setFocusedInput('title')}
-            onBlur={() => setFocusedInput(null)}
-          />
-        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: '1rem' }}>
+          <div style={styles.inputGroup}>
+            <input
+              ref={titleInputRef}
+              name="title"
+              type="text"
+              value={formData.title}
+              onChange={handleInputChange}
+              onKeyPress={handleKeyPress}
+              placeholder="Enter title *"
+              style={styles.input}
+            />
+            {errors.title && <span style={{ color: '#e53e3e', fontSize: '0.8rem' }}>{errors.title}</span>}
+          </div>
 
-        <div style={styles.inputGroup}>
-          <label style={styles.label}>
-            <Icons.Platform /> Streaming Platform
-          </label>
           <input
             name="platform"
             type="text"
             value={formData.platform}
             onChange={handleInputChange}
             onKeyPress={handleKeyPress}
-            placeholder="e.g., Netflix, Hulu, Disney+"
-            style={{
-              ...styles.input,
-              ...(focusedInput === 'platform' ? styles.inputFocus : {})
-            }}
-            onFocus={() => setFocusedInput('platform')}
-            onBlur={() => setFocusedInput(null)}
+            placeholder="Platform"
+            style={styles.input}
           />
-        </div>
 
-        <div style={styles.inputGroup}>
-          <label style={styles.label}>
-            <Icons.Genre /> Genre
-          </label>
-          <input
-            name="genre"
-            type="text"
-            value={formData.genre}
-            onChange={handleInputChange}
-            onKeyPress={handleKeyPress}
-            placeholder="e.g., Action, Comedy, Drama"
-            style={{
-              ...styles.input,
-              ...(focusedInput === 'genre' ? styles.inputFocus : {})
-            }}
-            onFocus={() => setFocusedInput('genre')}
-            onBlur={() => setFocusedInput(null)}
-          />
-        </div>
-
-        <div style={styles.inputGroup}>
-          <label style={styles.label}>
-            <Icons.Priority /> Priority
-          </label>
           <select
             name="priority"
             value={formData.priority}
             onChange={handleInputChange}
-            style={{
-              ...styles.select,
-              ...(focusedInput === 'priority' ? styles.inputFocus : {})
-            }}
-            onFocus={() => setFocusedInput('priority')}
-            onBlur={() => setFocusedInput(null)}
+            style={styles.select}
           >
             <option value="low">Low Priority</option>
             <option value="medium">Medium Priority</option>
@@ -257,37 +653,51 @@ const StreamListPage = () => {
           </select>
         </div>
 
-        <div style={styles.inputGroup}>
-          <label style={styles.label}>
-            Notes/Description
-          </label>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+          <input
+            name="genre"
+            type="text"
+            value={formData.genre}
+            onChange={handleInputChange}
+            onKeyPress={handleKeyPress}
+            placeholder="Genre"
+            style={styles.input}
+          />
+
           <textarea
             name="description"
             value={formData.description}
             onChange={handleInputChange}
-            placeholder="Add any notes about why you want to watch this..."
-            style={{
-              ...styles.textarea,
-              ...(focusedInput === 'description' ? styles.inputFocus : {})
-            }}
-            onFocus={() => setFocusedInput('description')}
-            onBlur={() => setFocusedInput(null)}
+            placeholder="Description/Notes"
+            style={{...styles.textarea, minHeight: '40px'}}
           />
         </div>
 
-        <div style={{ display: 'flex', gap: '1rem' }}>
+        <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
           <button 
-            onClick={handleSubmit}
+            type="button"
+            onClick={handleAddStream}
             style={styles.button}
-            disabled={!formData.title.trim()}
+            disabled={isSubmitting || !formData.title.trim()}
           >
             <Icons.Add />
-            Add to Stream List
+            {isSubmitting ? 'Adding...' : 'Add Stream'}
+          </button>
+          
+          <button 
+            type="button"
+            onClick={clearForm}
+            style={styles.buttonSecondary}
+            disabled={isSubmitting}
+          >
+            <Icons.Cancel />
+            Clear Form
           </button>
           
           {streams.length > 0 && (
             <button 
-              onClick={handleClearAll}
+              type="button"
+              onClick={handleClearAll} 
               style={styles.deleteButton}
             >
               <Icons.Delete />
@@ -295,194 +705,59 @@ const StreamListPage = () => {
             </button>
           )}
         </div>
-      </div>
+      </form>
 
       {/* Stream List Display */}
-      {streams.length > 0 && (
+      {filteredAndSortedStreams.length > 0 && (
         <div style={styles.streamList}>
           <div style={styles.streamListHeader}>
             <h3 style={styles.streamListTitle}>
-              Your Streaming Queue
+              {searchTerm || filterBy !== 'all' ? 'Filtered Results' : 'Your Complete Streaming Queue'} ({filteredAndSortedStreams.length} items)
             </h3>
-            <div style={styles.streamListStats}>
-              <span>Total: {totalCount}</span>
-              <span>Completed: {completedCount}</span>
-              <span>Remaining: {totalCount - completedCount}</span>
-            </div>
           </div>
           
-          {streams.map((stream) => (
-            <div
-              key={stream.id}
-              style={{
-                ...styles.streamItem,
-                ...(stream.completed ? styles.streamItemCompleted : {}),
-                ...(editingId === stream.id ? styles.streamItemEditing : {})
-              }}
-            >
-              <div style={styles.streamHeader}>
-                <div style={{
-                  ...styles.streamTitle,
-                  ...(stream.completed ? styles.streamTitleCompleted : {})
-                }}>
-                  {stream.title}
-                </div>
-                
-                <div style={styles.streamActions}>
-                  <button
-                    onClick={() => handleToggleComplete(stream.id, stream.title)}
-                    style={{
-                      ...styles.buttonSuccess,
-                      background: stream.completed 
-                        ? 'linear-gradient(135deg, #ffa726, #ff9800)' 
-                        : 'linear-gradient(135deg, #48bb78, #38a169)'
-                    }}
-                  >
-                    {stream.completed ? <Icons.Incomplete /> : <Icons.Complete />}
-                    {stream.completed ? 'Undo' : 'Complete'}
-                  </button>
-                  
-                  {editingId !== stream.id && (
-                    <>
-                      <button
-                        onClick={() => handleEdit(stream)}
-                        style={styles.buttonSecondary}
-                      >
-                        <Icons.Edit />
-                        Edit
-                      </button>
-                      
-                      <button
-                        onClick={() => handleDelete(stream.id, stream.title)}
-                        style={styles.deleteButton}
-                      >
-                        <Icons.Delete />
-                        Delete
-                      </button>
-                    </>
-                  )}
-                </div>
-              </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            {filteredAndSortedStreams.map((stream) => (
+              <StreamItem
+                key={stream.id}
+                stream={stream}
+                isEditing={editingId === stream.id}
+                onEdit={handleEdit}
+                onSave={handleSaveEdit}
+                onCancel={handleCancelEdit}
+                onDelete={handleDelete}
+                onToggleComplete={handleToggleComplete}
+                editFormData={editFormData}
+                onEditInputChange={handleEditInputChange}
+              />
+            ))}
+          </div>
+        </div>
+      )}
 
-              <div style={styles.streamMeta}>
-                {stream.platform && (
-                  <span style={styles.streamBadge}>
-                    <Icons.Platform /> {stream.platform}
-                  </span>
-                )}
-                {stream.genre && (
-                  <span style={styles.streamBadge}>
-                    <Icons.Genre /> {stream.genre}
-                  </span>
-                )}
-                <span style={{
-                  ...styles.streamBadge,
-                  background: stream.priority === 'high' ? '#ff6b6b' : 
-                            stream.priority === 'medium' ? '#ffa726' : '#4caf50'
-                }}>
-                  <Icons.Priority />
-                  {stream.priority === 'high' ? '🔥 HIGH' : 
-                   stream.priority === 'medium' ? '⭐ MEDIUM' : '📅 LOW'}
-                </span>
-                <span style={styles.streamBadge}>
-                  <Icons.Date /> Added: {stream.dateAdded}
-                </span>
-                {stream.dateUpdated !== stream.dateAdded && (
-                  <span style={styles.streamBadge}>
-                    <Icons.Date /> Updated: {stream.dateUpdated}
-                  </span>
-                )}
-              </div>
+      {/* Enhanced No results message */}
+      {filteredAndSortedStreams.length === 0 && streams.length > 0 && (
+        <div style={{ textAlign: 'center', padding: '3rem', color: '#718096' }}>
+          <Icons.Search style={{ fontSize: '3rem', marginBottom: '1rem' }} />
+          <p>No streams found matching your search criteria.</p>
+          <button 
+            onClick={showFullQueue}
+            style={styles.button}
+          >
+            <Icons.Home />
+            Show Full Queue
+          </button>
+        </div>
+      )}
 
-              {stream.description && (
-                <div style={styles.streamDescription}>
-                  {stream.description}
-                </div>
-              )}
-
-              {/* Edit Form */}
-              {editingId === stream.id && (
-                <div style={styles.editForm}>
-                  <h4 style={{ color: '#4a5568', marginBottom: '1rem' }}>Edit Stream</h4>
-                  
-                  <div style={styles.inputGroup}>
-                    <label style={styles.label}>Title</label>
-                    <input
-                      name="title"
-                      type="text"
-                      value={editFormData.title || ''}
-                      onChange={handleEditInputChange}
-                      style={styles.input}
-                    />
-                  </div>
-
-                  <div style={styles.inputGroup}>
-                    <label style={styles.label}>Platform</label>
-                    <input
-                      name="platform"
-                      type="text"
-                      value={editFormData.platform || ''}
-                      onChange={handleEditInputChange}
-                      style={styles.input}
-                    />
-                  </div>
-
-                  <div style={styles.inputGroup}>
-                    <label style={styles.label}>Genre</label>
-                    <input
-                      name="genre"
-                      type="text"
-                      value={editFormData.genre || ''}
-                      onChange={handleEditInputChange}
-                      style={styles.input}
-                    />
-                  </div>
-
-                  <div style={styles.inputGroup}>
-                    <label style={styles.label}>Priority</label>
-                    <select
-                      name="priority"
-                      value={editFormData.priority || 'medium'}
-                      onChange={handleEditInputChange}
-                      style={styles.select}
-                    >
-                      <option value="low">Low Priority</option>
-                      <option value="medium">Medium Priority</option>
-                      <option value="high">High Priority</option>
-                    </select>
-                  </div>
-
-                  <div style={styles.inputGroup}>
-                    <label style={styles.label}>Description</label>
-                    <textarea
-                      name="description"
-                      value={editFormData.description || ''}
-                      onChange={handleEditInputChange}
-                      style={styles.textarea}
-                    />
-                  </div>
-
-                  <div style={styles.editFormActions}>
-                    <button
-                      onClick={handleSaveEdit}
-                      style={styles.buttonSuccess}
-                      disabled={!editFormData.title?.trim()}
-                    >
-                      <Icons.Save />
-                      Save Changes
-                    </button>
-                    <button
-                      onClick={handleCancelEdit}
-                      style={styles.deleteButton}
-                    >
-                      <Icons.Cancel />
-                      Cancel
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          ))}
+      {/* Empty state */}
+      {streams.length === 0 && (
+        <div style={{ textAlign: 'center', padding: '3rem', color: '#718096' }}>
+          <Icons.Stream style={{ fontSize: '3rem', marginBottom: '1rem' }} />
+          <p>Your streaming queue is empty. Add some movies or shows to get started!</p>
+          <p style={{ fontSize: '0.9rem', marginTop: '1rem' }}>
+            💡 Tip: You can also discover and add movies from the Movies page!
+          </p>
         </div>
       )}
 
@@ -496,7 +771,5 @@ const StreamListPage = () => {
     </div>
   );
 };
-
-
 
 export default StreamListPage;
