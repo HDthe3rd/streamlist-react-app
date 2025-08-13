@@ -1,43 +1,378 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#000000" />
-    <meta
-      name="description"
-      content="Web site created using create-react-app"
-    />
-    <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
-    <!--
-      manifest.json provides metadata used when your web app is installed on a
-      user's mobile device or desktop. See https://developers.google.com/web/fundamentals/web-app-manifest/
-    -->
-    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
-    <!--
-      Notice the use of %PUBLIC_URL% in the tags above.
-      It will be replaced with the URL of the `public` folder during the build.
-      Only files inside the `public` folder can be referenced from the HTML.
+<head>
+  <meta charset="utf-8" />
+  
+  <!-- PWA Primary Meta Tags -->
+  <title>StreamList Pro - Movie & Entertainment Manager</title>
+  <meta name="title" content="StreamList Pro - Movie & Entertainment Manager">
+  <meta name="description" content="Professional streaming content management with movie discovery, cart functionality, and secure authentication. Built with React and PWA technology.">
+  <meta name="keywords" content="streaming, movies, watchlist, entertainment, PWA, React">
+  <meta name="author" content="Henry Dillard">
+  
+  <!-- Viewport for responsive design -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no, viewport-fit=cover" />
+  
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+  
+  <!-- Favicon and Icons -->
+  <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
+  <link rel="shortcut icon" href="%PUBLIC_URL%/favicon.ico" />
+  
+  <!-- Apple Touch Icons -->
+  <link rel="apple-touch-icon" href="%PUBLIC_URL%/images/icon-192x192.png" />
+  <link rel="apple-touch-icon" sizes="152x152" href="%PUBLIC_URL%/images/icon-152x152.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="%PUBLIC_URL%/images/icon-192x192.png" />
+  <link rel="apple-touch-icon" sizes="167x167" href="%PUBLIC_URL%/images/icon-192x192.png" />
+  
+  <!-- Apple Web App Meta Tags -->
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="StreamList Pro" />
+  
+  <!-- Microsoft Tiles -->
+  <meta name="msapplication-TileImage" content="%PUBLIC_URL%/images/icon-192x192.png" />
+  <meta name="msapplication-TileColor" content="#667eea" />
+  <meta name="msapplication-config" content="%PUBLIC_URL%/browserconfig.xml" />
+  
+  <!-- PWA Theme Colors -->
+  <meta name="theme-color" content="#764ba2" />
+  <meta name="msapplication-navbutton-color" content="#764ba2" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="#764ba2" />
+  
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://streamlist-pro.app/">
+  <meta property="og:title" content="StreamList Pro - Movie & Entertainment Manager">
+  <meta property="og:description" content="Professional streaming content management with movie discovery, cart functionality, and secure authentication.">
+  <meta property="og:image" content="%PUBLIC_URL%/images/og-image.png">
+  <meta property="og:site_name" content="StreamList Pro">
+  
+  <!-- Twitter -->
+  <meta property="twitter:card" content="summary_large_image">
+  <meta property="twitter:url" content="https://streamlist-pro.app/">
+  <meta property="twitter:title" content="StreamList Pro - Movie & Entertainment Manager">
+  <meta property="twitter:description" content="Professional streaming content management with movie discovery, cart functionality, and secure authentication.">
+  <meta property="twitter:image" content="%PUBLIC_URL%/images/og-image.png">
+  
+  <!-- Preload critical resources -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://api.themoviedb.org">
+  
+  <!-- Security Headers -->
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+  <meta http-equiv="X-XSS-Protection" content="1; mode=block">
+  
+  <!-- DNS Prefetch for external domains -->
+  <link rel="dns-prefetch" href="//api.themoviedb.org">
+  <link rel="dns-prefetch" href="//image.tmdb.org">
+  
+  <!-- Critical CSS - Inline for faster loading -->
+  <style>
+    /* Critical loading styles */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+        'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+        sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      color: #333;
+    }
 
-      Unlike "/favicon.ico" or "favicon.ico", "%PUBLIC_URL%/favicon.ico" will
-      work correctly both with client-side routing and a non-root public URL.
-      Learn how to configure a non-root public URL by running `npm run build`.
-    -->
-    <title>React App</title>
-  </head>
-  <body>
-    <noscript>You need to enable JavaScript to run this app.</noscript>
-    <div id="root"></div>
-    <!--
-      This HTML file is a template.
-      If you open it directly in the browser, you will see an empty page.
+    /* Loading screen */
+    #loading-screen {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      text-align: center;
+      padding: 2rem;
+    }
 
-      You can add webfonts, meta tags, or analytics to this file.
-      The build step will place the bundled scripts into the <body> tag.
+    .loading-logo {
+      font-size: 4rem;
+      margin-bottom: 1rem;
+      animation: pulse 2s infinite;
+    }
 
-      To begin the development, run `npm start` or `yarn start`.
-      To create a production bundle, use `npm run build` or `yarn build`.
-    -->
-  </body>
+    .loading-title {
+      font-size: 2rem;
+      font-weight: bold;
+      margin-bottom: 1rem;
+      background: rgba(255, 255, 255, 0.9);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .loading-subtitle {
+      font-size: 1.1rem;
+      margin-bottom: 2rem;
+      opacity: 0.8;
+    }
+
+    .loading-spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top-color: white;
+      animation: spin 1s ease-in-out infinite;
+    }
+
+    .loading-progress {
+      margin-top: 2rem;
+      font-size: 0.9rem;
+      opacity: 0.7;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.05); opacity: 0.8; }
+    }
+
+    /* PWA Installation Banner */
+    .pwa-banner {
+      position: fixed;
+      bottom: 1rem;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.8);
+      color: white;
+      padding: 1rem;
+      border-radius: 8px;
+      display: none;
+      align-items: center;
+      gap: 1rem;
+      z-index: 1000;
+      backdrop-filter: blur(10px);
+    }
+
+    .pwa-banner button {
+      background: #667eea;
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    /* Hide loading screen when React loads */
+    .app-loaded #loading-screen {
+      display: none;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+      .loading-logo {
+        font-size: 3rem;
+      }
+      
+      .loading-title {
+        font-size: 1.5rem;
+      }
+      
+      .loading-subtitle {
+        font-size: 1rem;
+      }
+    }
+
+    /* Accessibility improvements */
+    @media (prefers-reduced-motion: reduce) {
+      .loading-logo,
+      .loading-spinner {
+        animation: none;
+      }
+    }
+
+    /* Dark mode support */
+    @media (prefers-color-scheme: dark) {
+      body {
+        background: linear-gradient(135deg, #2d3748 0%, #4a5568 100%);
+      }
+    }
+  </style>
+
+  <!-- Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "StreamList Pro",
+    "description": "Professional streaming content management with movie discovery, cart functionality, and secure authentication",
+    "url": "https://streamlist-pro.app",
+    "applicationCategory": "Entertainment",
+    "operatingSystem": "Any",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    },
+    "author": {
+      "@type": "Person",
+      "name": "Henry Dillard"
+    }
+  }
+  </script>
+</head>
+
+<body>
+  <noscript>
+    <div style="display: flex; align-items: center; justify-content: center; min-height: 100vh; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-align: center; padding: 2rem; font-family: system-ui;">
+      <div>
+        <h1 style="font-size: 2rem; margin-bottom: 1rem;">StreamList Pro</h1>
+        <p style="font-size: 1.2rem; margin-bottom: 2rem;">JavaScript is required to run this application.</p>
+        <p style="opacity: 0.8;">Please enable JavaScript in your browser settings and refresh the page.</p>
+      </div>
+    </div>
+  </noscript>
+
+  <!-- Loading Screen (shown while React loads) -->
+  <div id="loading-screen">
+    <div class="loading-logo">🎬</div>
+    <h1 class="loading-title">StreamList Pro</h1>
+    <p class="loading-subtitle">Your Premium Streaming Manager</p>
+    <div class="loading-spinner"></div>
+    <div class="loading-progress">Loading your entertainment experience...</div>
+  </div>
+
+  <!-- PWA Installation Banner -->
+  <div class="pwa-banner" id="pwa-banner">
+    <span>📱 Install StreamList Pro for the best experience!</span>
+    <button onclick="installPWA()">Install</button>
+    <button onclick="dismissPWABanner()" style="background: transparent; border: 1px solid rgba(255,255,255,0.3);">Later</button>
+  </div>
+
+  <!-- React Root -->
+  <div id="root"></div>
+
+  <!-- PWA Installation Script -->
+  <script>
+    let deferredPrompt;
+    
+    // Listen for PWA install prompt
+    window.addEventListener('beforeinstallprompt', (e) => {
+      console.log('[PWA] Install prompt available');
+      e.preventDefault();
+      deferredPrompt = e;
+      
+      // Show custom install banner after 10 seconds
+      setTimeout(() => {
+        const banner = document.getElementById('pwa-banner');
+        if (banner && !window.matchMedia('(display-mode: standalone)').matches) {
+          banner.style.display = 'flex';
+        }
+      }, 10000);
+    });
+
+    // Install PWA function
+    function installPWA() {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then((choiceResult) => {
+          console.log('[PWA] User choice:', choiceResult.outcome);
+          deferredPrompt = null;
+          dismissPWABanner();
+        });
+      }
+    }
+
+    // Dismiss PWA banner
+    function dismissPWABanner() {
+      const banner = document.getElementById('pwa-banner');
+      if (banner) {
+        banner.style.display = 'none';
+      }
+      localStorage.setItem('pwaBannerDismissed', Date.now());
+    }
+
+    // Check if banner was recently dismissed
+    window.addEventListener('load', () => {
+      const dismissed = localStorage.getItem('pwaBannerDismissed');
+      if (dismissed && Date.now() - parseInt(dismissed) < 7 * 24 * 60 * 60 * 1000) {
+        // Don't show banner for 7 days after dismissal
+        const banner = document.getElementById('pwa-banner');
+        if (banner) banner.style.display = 'none';
+      }
+    });
+
+    // Hide loading screen when React is ready
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        document.body.classList.add('app-loaded');
+      }, 100);
+    });
+
+    // Basic error handling
+    window.addEventListener('error', (e) => {
+      console.error('[App] Runtime error:', e.error);
+    });
+
+    // Handle unhandled promise rejections
+    window.addEventListener('unhandledrejection', (e) => {
+      console.error('[App] Unhandled promise rejection:', e.reason);
+    });
+
+    // Performance monitoring
+    window.addEventListener('load', () => {
+      if ('performance' in window && performance.timing) {
+        setTimeout(() => {
+          const perfData = performance.timing;
+          if (perfData.loadEventEnd && perfData.navigationStart) {
+            const loadTime = perfData.loadEventEnd - perfData.navigationStart;
+            console.log('[Performance] Page load time:', loadTime + 'ms');
+          }
+        }, 0);
+      }
+    });
+
+    // Service Worker registration (backup - also done in React app)
+    if ('serviceWorker' in navigator && window.location.protocol === 'https:') {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+          .then((registration) => {
+            console.log('[PWA] SW registered:', registration);
+          })
+          .catch((error) => {
+            console.log('[PWA] SW registration failed:', error);
+          });
+      });
+    }
+
+    // Install event tracking
+    window.addEventListener('appinstalled', (evt) => {
+      console.log('[PWA] App was installed successfully');
+      dismissPWABanner();
+    });
+  </script>
+
+  <!-- 
+    This HTML file is a template.
+    If you open it directly in the browser, you will see an empty page.
+    
+    You can add webfonts, meta tags, or analytics to this file.
+    The build step will place the bundled scripts into the <body> tag.
+    
+    To begin the development, run `npm start` or `yarn start`.
+    To create a production bundle, use `npm run build` or `yarn build`.
+  -->
+</body>
 </html>

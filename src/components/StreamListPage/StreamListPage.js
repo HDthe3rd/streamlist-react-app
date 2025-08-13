@@ -519,7 +519,7 @@ const StreamListPage = () => {
     showNotification('📋 Showing your complete streaming queue');
   }, [showNotification]);
 
-  const handleKeyPress = useCallback((e) => {
+  const handleKeyDown = useCallback((e) => {
     if (e.key === 'Enter') {
       if (e.target.name === 'search') {
         handleSearch();
@@ -561,7 +561,7 @@ const StreamListPage = () => {
       {/* Enhanced Search and Filter Controls */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: '2fr auto auto 1fr 1fr',
+        gridTemplateColumns: '2fr auto 1fr 1fr',
         gap: '1rem',
         marginBottom: '2rem',
         alignItems: 'end'
@@ -572,24 +572,42 @@ const StreamListPage = () => {
           placeholder="Search streams..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          onKeyPress={handleKeyPress}
+          onKeyDown={handleKeyDown}
           style={styles.input}
         />
-        <button
-          onClick={handleSearch}
-          style={{...styles.buttonSecondary, height: 'fit-content', padding: '1rem'}}
-        >
-          <Icons.Search />
-          Search
-        </button>
-        <button
-          onClick={showFullQueue}
-          style={{...styles.button, height: 'fit-content', padding: '1rem', fontSize: '0.9rem'}}
-          title="Show complete queue"
-        >
-          <Icons.Home />
-          Full Queue
-        </button>
+        <div style={{
+          display: 'flex',
+          gap: '0.75rem',
+          justifyContent: 'center',
+          alignItems: 'center'
+        }}>
+          <button
+            onClick={handleSearch}
+            style={{
+              ...styles.buttonSecondary, 
+              height: 'fit-content', 
+              padding: '1rem 1.25rem',
+              minWidth: '100px'
+            }}
+          >
+            <Icons.Search />
+            Search
+          </button>
+          <button
+            onClick={showFullQueue}
+            style={{
+              ...styles.button, 
+              height: 'fit-content', 
+              padding: '1rem 1.25rem', 
+              fontSize: '0.9rem',
+              minWidth: '120px'
+            }}
+            title="Show complete queue"
+          >
+            <Icons.Home />
+            Full Queue
+          </button>
+        </div>
         <select
           value={sortBy}
           onChange={(e) => setSortBy(e.target.value)}
@@ -624,7 +642,7 @@ const StreamListPage = () => {
               type="text"
               value={formData.title}
               onChange={handleInputChange}
-              onKeyPress={handleKeyPress}
+              onKeyDown={handleKeyDown}
               placeholder="Enter title *"
               style={styles.input}
             />
@@ -636,7 +654,7 @@ const StreamListPage = () => {
             type="text"
             value={formData.platform}
             onChange={handleInputChange}
-            onKeyPress={handleKeyPress}
+            onKeyDown={handleKeyDown}
             placeholder="Platform"
             style={styles.input}
           />
@@ -659,7 +677,7 @@ const StreamListPage = () => {
             type="text"
             value={formData.genre}
             onChange={handleInputChange}
-            onKeyPress={handleKeyPress}
+            onKeyDown={handleKeyDown}
             placeholder="Genre"
             style={styles.input}
           />
@@ -673,12 +691,35 @@ const StreamListPage = () => {
           />
         </div>
 
-        <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+        <div style={{ 
+          display: 'flex', 
+          gap: '1rem', 
+          marginTop: '1rem',
+          alignItems: 'center',
+          justifyContent: 'flex-start',
+          flexWrap: 'wrap'
+        }}>
           <button 
             type="button"
             onClick={handleAddStream}
-            style={styles.button}
+            style={{
+              ...styles.button,
+              border: '2px solid #667eea',
+              boxShadow: '0 4px 12px rgba(102, 126, 234, 0.3)',
+              fontWeight: '600',
+              minWidth: '140px',
+              position: 'relative',
+              overflow: 'hidden'
+            }}
             disabled={isSubmitting || !formData.title.trim()}
+            onMouseEnter={(e) => {
+              e.target.style.transform = 'translateY(-2px)';
+              e.target.style.boxShadow = '0 6px 16px rgba(102, 126, 234, 0.4)';
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.transform = 'translateY(0)';
+              e.target.style.boxShadow = '0 4px 12px rgba(102, 126, 234, 0.3)';
+            }}
           >
             <Icons.Add />
             {isSubmitting ? 'Adding...' : 'Add Stream'}
@@ -687,7 +728,10 @@ const StreamListPage = () => {
           <button 
             type="button"
             onClick={clearForm}
-            style={styles.buttonSecondary}
+            style={{
+              ...styles.buttonSecondary,
+              minWidth: '120px'
+            }}
             disabled={isSubmitting}
           >
             <Icons.Cancel />
@@ -698,7 +742,10 @@ const StreamListPage = () => {
             <button 
               type="button"
               onClick={handleClearAll} 
-              style={styles.deleteButton}
+              style={{
+                ...styles.deleteButton,
+                minWidth: '110px'
+              }}
             >
               <Icons.Delete />
               Clear All

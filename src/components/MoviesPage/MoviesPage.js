@@ -1,12 +1,14 @@
-import React, { useState } from 'react';
+// src/components/MoviesPage/MoviesPage.js - Enhanced with Cart Integration
+import { useState } from 'react';
 import { styles } from '../../styles/styles';
 import { Icons } from '../../utils/icons';
 import { localStorageUtils } from '../../utils/localStorageUtils';
 import { securityUtils } from '../../utils/securityUtils';
+import { cartUtils } from '../../utils/cartUtils';
 import { tmdbAPI } from '../../services/tmdbAPI';
 import Notification from '../Notification/Notification';
 
-// Enhanced Movies Page Component with proper StreamList integration
+// Enhanced Movies Page Component with cart integration
 const MoviesPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [movies, setMovies] = useState([]);
@@ -17,6 +19,8 @@ const MoviesPage = () => {
 
   const showNotification = (message) => {
     setNotification(message);
+    // Dispatch custom event for cart updates
+    window.dispatchEvent(new CustomEvent('cartUpdated'));
   };
 
   const hideNotification = () => {
@@ -60,83 +64,14 @@ const MoviesPage = () => {
     }
   };
 
-  const handleKeyPress = (e) => {
+  const handleKeyDown = (e) => {
     if (e.key === 'Enter') {
       handleSearch();
     }
   };
 
-  // Enhanced function to actually add movies to StreamList
+  // Enhanced function to add movies to StreamList
   const addToStreamList = (movie) => {
-    try {
-      // Load existing streams
-      const existingStreams = localStorageUtils.loadStreams();
-      
-      // Check for duplicates (by title)
-      const isDuplicate = existingStreams.some(stream => 
-        stream.title.toLowerCase() === movie.title.toLowerCase()
-      );
-      
-      if (isDuplicate) {
-        showNotification(`"${movie.title}" is already in your StreamList!`);
-        return;
-      }
-
-      // Convert movie to stream format
-      const newStream = {
-        id: Date.now() + Math.random(), // Unique ID
-        title: securityUtils.sanitizeInput(movie.title),
-        platform: 'Unknown', // Movies don't have platform info
-        genre: getGenreNames(movie.genre_ids).join(', '), // Convert genre IDs to names
-        priority: 'medium', // Default priority
-        description: securityUtils.sanitizeInput(movie.overview || 'Added from movie search'),
-        completed: false,
-        dateAdded: new Date().toLocaleDateString(),
-        dateUpdated: new Date().toLocaleDateString(),
-        // Additional movie-specific data
-        movieData: {
-          tmdbId: movie.id,
-          releaseDate: movie.release_date,
-          voteAverage: movie.vote_average,
-          posterPath: movie.poster_path,
-          addedFromMovieSearch: true
-        }
-      };
-
-      // Add to existing streams
-      const updatedStreams = [newStream, ...existingStreams];
-      
-      // Save back to localStorage
-      const success = localStorageUtils.saveStreams(updatedStreams);
-      
-      if (success) {
-        console.log('Movie added to StreamList:', movie.title);
-        showNotification(`✅ "${movie.title}" added to your StreamList!`);
-      } else {
-        throw new Error('Failed to save to storage');
-      }
-    } catch (error) {
-      console.error('Error adding to StreamList:', error);
-      showNotification(`❌ Failed to add "${movie.title}" to StreamList. Please try again.`);
-    }
-  };
-
-  // Helper function to convert genre IDs to names
-  const getGenreNames = (genreIds) => {
-    const genreMap = {
-      28: 'Action', 12: 'Adventure', 16: 'Animation', 35: 'Comedy', 80: 'Crime',
-      99: 'Documentary', 18: 'Drama', 10751: 'Family', 14: 'Fantasy', 36: 'History',
-      27: 'Horror', 10402: 'Music', 9648: 'Mystery', 10749: 'Romance', 878: 'Sci-Fi',
-      10770: 'TV Movie', 53: 'Thriller', 10752: 'War', 37: 'Western'
-    };
-    
-    if (!Array.isArray(genreIds)) return ['Unknown'];
-    
-    return genreIds.map(id => genreMap[id] || 'Unknown').filter(genre => genre !== 'Unknown');
-  };
-
-  // Enhanced function to add to specific watchlist priority
-  const addToStreamListWithPriority = (movie, priority = 'medium') => {
     try {
       const existingStreams = localStorageUtils.loadStreams();
       
@@ -154,7 +89,7 @@ const MoviesPage = () => {
         title: securityUtils.sanitizeInput(movie.title),
         platform: 'To Be Determined',
         genre: getGenreNames(movie.genre_ids).join(', '),
-        priority: priority,
+        priority: 'medium',
         description: securityUtils.sanitizeInput(
           movie.overview ? 
           `${movie.overview.substring(0, 200)}${movie.overview.length > 200 ? '...' : ''}` : 
@@ -176,21 +111,50 @@ const MoviesPage = () => {
       const success = localStorageUtils.saveStreams(updatedStreams);
       
       if (success) {
-        showNotification(`✅ "${movie.title}" added with ${priority} priority!`);
+        showNotification(`📺 "${movie.title}" added to your StreamList!`);
       } else {
         throw new Error('Failed to save');
       }
     } catch (error) {
       console.error('Error adding to StreamList:', error);
-      showNotification(`❌ Failed to add "${movie.title}". Please try again.`);
+      showNotification(`❌ Failed to add "${movie.title}" to StreamList. Please try again.`);
     }
+  };
+
+  // New function to add movies to cart
+  const addToCart = (movie, accessType = 'rental') => {
+    try {
+      cartUtils.addMovieToCart(movie, accessType);
+      const price = accessType === 'rental' ? cartUtils.PRICING.MOVIE_RENTAL : cartUtils.PRICING.MOVIE_PURCHASE;
+      
+      showNotification(
+        `🛒 "${movie.title}" (${accessType}) added to cart for ${cartUtils.formatCurrency(price)}!`
+      );
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+      showNotification(`❌ Failed to add "${movie.title}" to cart. Please try again.`);
+    }
+  };
+
+  // Helper function to convert genre IDs to names
+  const getGenreNames = (genreIds) => {
+    const genreMap = {
+      28: 'Action', 12: 'Adventure', 16: 'Animation', 35: 'Comedy', 80: 'Crime',
+      99: 'Documentary', 18: 'Drama', 10751: 'Family', 14: 'Fantasy', 36: 'History',
+      27: 'Horror', 10402: 'Music', 9648: 'Mystery', 10749: 'Romance', 878: 'Sci-Fi',
+      10770: 'TV Movie', 53: 'Thriller', 10752: 'War', 37: 'Western'
+    };
+    
+    if (!Array.isArray(genreIds)) return ['Unknown'];
+    
+    return genreIds.map(id => genreMap[id] || 'Unknown').filter(genre => genre !== 'Unknown');
   };
 
   return (
     <div style={styles.page}>
-      <h1 style={styles.pageTitle}>Movie Discovery</h1>
+      <h1 style={styles.pageTitle}>Movie Discovery & Shopping</h1>
       <p style={{ textAlign: 'center', color: '#718096', marginBottom: '2rem' }}>
-        <Icons.API /> Search movies and add them directly to your StreamList
+        <Icons.API /> Search movies, add to your StreamList, or purchase/rent directly
       </p>
       
       {/* Search Form */}
@@ -199,8 +163,8 @@ const MoviesPage = () => {
           type="text"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          onKeyPress={handleKeyPress}
-          placeholder="Search for movies to add to your watchlist..."
+          onKeyDown={handleKeyDown}
+          placeholder="Search for movies to add to StreamList or Cart..."
           style={styles.searchInput}
         />
         <button
@@ -211,6 +175,44 @@ const MoviesPage = () => {
           <Icons.Search />
           {loading ? 'Searching...' : 'Search'}
         </button>
+      </div>
+
+      {/* Pricing Info */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+        gap: '1rem',
+        marginBottom: '2rem',
+        maxWidth: '800px',
+        margin: '0 auto 2rem auto'
+      }}>
+        <div style={{
+          ...styles.streamBadge,
+          background: 'linear-gradient(135deg, #4299e1, #667eea)',
+          padding: '1rem',
+          justifyContent: 'center',
+          fontSize: '0.9rem'
+        }}>
+          📅 Rentals from {cartUtils.formatCurrency(cartUtils.PRICING.MOVIE_RENTAL)}
+        </div>
+        <div style={{
+          ...styles.streamBadge,
+          background: 'linear-gradient(135deg, #48bb78, #38a169)',
+          padding: '1rem',
+          justifyContent: 'center',
+          fontSize: '0.9rem'
+        }}>
+          💾 Purchases from {cartUtils.formatCurrency(cartUtils.PRICING.MOVIE_PURCHASE)}
+        </div>
+        <div style={{
+          ...styles.streamBadge,
+          background: 'linear-gradient(135deg, #ffa726, #ff9800)',
+          padding: '1rem',
+          justifyContent: 'center',
+          fontSize: '0.9rem'
+        }}>
+          📺 StreamList FREE
+        </div>
       </div>
 
       {/* Error Message */}
@@ -246,7 +248,7 @@ const MoviesPage = () => {
             padding: '1rem',
             borderRadius: '8px'
           }}>
-            <Icons.Movie /> Found {movies.length} movies for "{searchQuery}" - Click to add to your StreamList!
+            <Icons.Movie /> Found {movies.length} movies for "{searchQuery}" 
           </div>
           
           <div style={styles.moviesGrid}>
@@ -262,7 +264,7 @@ const MoviesPage = () => {
                   e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.05)';
                 }}
               >
-                {/* Movie Poster Placeholder */}
+                {/* Movie Poster */}
                 <div style={styles.moviePoster}>
                   {movie.poster_path ? (
                     <img 
@@ -325,69 +327,71 @@ const MoviesPage = () => {
                   </div>
                 )}
 
-                {/* Enhanced Add to StreamList Options */}
+                {/* Action Buttons */}
                 <div style={{
                   display: 'flex',
                   flexDirection: 'column',
-                  gap: '0.5rem',
-                  marginTop: '1rem'
+                  gap: '1rem',
+                  marginTop: '1.25rem',
+                  padding: '0 0.5rem'
                 }}>
+                  {/* Add to StreamList - Free */}
                   <button
                     onClick={() => addToStreamList(movie)}
                     style={{
-                      ...styles.button,
+                      ...styles.buttonSuccess,
                       fontSize: '0.9rem',
-                      padding: '0.75rem 1rem'
+                      padding: '0.875rem 1.25rem'
                     }}
                   >
                     <Icons.Add />
-                    Add to StreamList
+                    Add to StreamList (FREE)
                   </button>
                   
-                  {/* Priority Options */}
+                  {/* Purchase/Rental Options */}
                   <div style={{
-                    display: 'flex',
-                    gap: '0.25rem',
-                    justifyContent: 'space-between'
+                    display: 'grid',
+                    gridTemplateColumns: '1fr 1fr',
+                    gap: '0.75rem'
                   }}>
                     <button
-                      onClick={() => addToStreamListWithPriority(movie, 'high')}
+                      onClick={() => addToCart(movie, 'rental')}
                       style={{
                         ...styles.buttonSecondary,
-                        background: '#ff6b6b',
-                        fontSize: '0.8rem',
-                        padding: '0.5rem',
-                        flex: 1
+                        fontSize: '0.85rem',
+                        padding: '0.75rem 0.75rem',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        gap: '0.375rem',
+                        minHeight: '80px'
                       }}
-                      title="Add as High Priority"
                     >
-                      🔥 High
+                      <Icons.Calendar />
+                      <span>Rent</span>
+                      <span style={{ fontSize: '0.8rem', fontWeight: 'bold' }}>
+                        {cartUtils.formatCurrency(cartUtils.PRICING.MOVIE_RENTAL)}
+                      </span>
                     </button>
+                    
                     <button
-                      onClick={() => addToStreamListWithPriority(movie, 'medium')}
+                      onClick={() => addToCart(movie, 'purchase')}
                       style={{
-                        ...styles.buttonSecondary,
-                        background: '#ffa726',
-                        fontSize: '0.8rem',
-                        padding: '0.5rem',
-                        flex: 1
+                        ...styles.button,
+                        fontSize: '0.85rem',
+                        padding: '0.75rem 0.75rem',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        gap: '0.375rem',
+                        minHeight: '80px'
                       }}
-                      title="Add as Medium Priority"
                     >
-                      ⭐ Med
-                    </button>
-                    <button
-                      onClick={() => addToStreamListWithPriority(movie, 'low')}
-                      style={{
-                        ...styles.buttonSecondary,
-                        background: '#4caf50',
-                        fontSize: '0.8rem',
-                        padding: '0.5rem',
-                        flex: 1
-                      }}
-                      title="Add as Low Priority"
-                    >
-                      📅 Low
+                      <Icons.Save />
+                      <span>Buy</span>
+                      <span style={{ fontSize: '0.8rem', fontWeight: 'bold' }}>
+                        {cartUtils.formatCurrency(cartUtils.PRICING.MOVIE_PURCHASE)}
+                      </span>
                     </button>
                   </div>
                 </div>
@@ -403,38 +407,68 @@ const MoviesPage = () => {
           <div style={styles.comingSoonIcon}>
             <Icons.Search />
           </div>
-          <h2 style={styles.comingSoonTitle}>Movie Search & Discovery</h2>
+          <h2 style={styles.comingSoonTitle}>Movie Discovery & Shopping</h2>
           <p style={styles.comingSoonText}>
-            Search for movies and add them directly to your StreamList with your preferred priority level. 
-            Movies will include genre information and ratings to help you decide what to watch next.
+            Search for movies and choose how you want to enjoy them:
           </p>
           
           <div style={{
-            background: 'rgba(102, 126, 234, 0.1)',
-            borderRadius: '12px',
-            padding: '1.5rem',
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+            gap: '1.5rem',
             marginTop: '2rem',
             textAlign: 'left'
           }}>
-            <h3 style={{
-              color: '#4a5568',
-              marginBottom: '1rem',
-              textAlign: 'center'
+            <div style={{
+              background: 'rgba(72, 187, 120, 0.1)',
+              borderRadius: '12px',
+              padding: '1.5rem',
+              border: '2px solid rgba(72, 187, 120, 0.2)'
             }}>
-              <Icons.API /> Integration Features
-            </h3>
-            <ul style={{
-              listStyle: 'none',
-              padding: 0,
-              margin: 0,
-              color: '#718096'
+              <h3 style={{ color: '#38a169', marginBottom: '1rem' }}>
+                📺 Add to StreamList (FREE)
+              </h3>
+              <ul style={{ listStyle: 'none', padding: 0, margin: 0, color: '#718096' }}>
+                <li style={{ marginBottom: '0.5rem' }}>✓ Track movies you want to watch</li>
+                <li style={{ marginBottom: '0.5rem' }}>✓ Organize by priority</li>
+                <li style={{ marginBottom: '0.5rem' }}>✓ Add personal notes</li>
+                <li>✓ Completely free</li>
+              </ul>
+            </div>
+            
+            <div style={{
+              background: 'rgba(102, 126, 234, 0.1)',
+              borderRadius: '12px',
+              padding: '1.5rem',
+              border: '2px solid rgba(102, 126, 234, 0.2)'
             }}>
-              <li style={{ marginBottom: '0.5rem' }}>✅ Direct integration with your StreamList</li>
-              <li style={{ marginBottom: '0.5rem' }}>✅ Automatic duplicate detection</li>
-              <li style={{ marginBottom: '0.5rem' }}>✅ Priority level selection (High/Med/Low)</li>
-              <li style={{ marginBottom: '0.5rem' }}>✅ Genre and rating information included</li>
-              <li>✅ Cached search results for performance</li>
-            </ul>
+              <h3 style={{ color: '#4299e1', marginBottom: '1rem' }}>
+                📅 Rent Movies
+              </h3>
+              <ul style={{ listStyle: 'none', padding: 0, margin: 0, color: '#718096' }}>
+                <li style={{ marginBottom: '0.5rem' }}>✓ Stream for 48 hours</li>
+                <li style={{ marginBottom: '0.5rem' }}>✓ HD quality</li>
+                <li style={{ marginBottom: '0.5rem' }}>✓ Instant access</li>
+                <li>✓ From {cartUtils.formatCurrency(cartUtils.PRICING.MOVIE_RENTAL)}</li>
+              </ul>
+            </div>
+            
+            <div style={{
+              background: 'rgba(255, 107, 107, 0.1)',
+              borderRadius: '12px',
+              padding: '1.5rem',
+              border: '2px solid rgba(255, 107, 107, 0.2)'
+            }}>
+              <h3 style={{ color: '#e53e3e', marginBottom: '1rem' }}>
+                💾 Purchase Movies
+              </h3>
+              <ul style={{ listStyle: 'none', padding: 0, margin: 0, color: '#718096' }}>
+                <li style={{ marginBottom: '0.5rem' }}>✓ Own forever</li>
+                <li style={{ marginBottom: '0.5rem' }}>✓ 4K UHD quality</li>
+                <li style={{ marginBottom: '0.5rem' }}>✓ Download offline</li>
+                <li>✓ From {cartUtils.formatCurrency(cartUtils.PRICING.MOVIE_PURCHASE)}</li>
+              </ul>
+            </div>
           </div>
         </div>
       )}
